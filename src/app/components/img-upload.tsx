@@ -260,7 +260,7 @@ function getLink(type: LinkType, link: string, filename: string) {
     case 'url':
       return link;
     case 'html':
-      return `<img src="${link}" alt=${filename} />`;
+      return `<img src="${link}" alt="${filename}" />`;
     case 'bbCode':
       return `[img]${link}[/img]`;
     case'markdown':
