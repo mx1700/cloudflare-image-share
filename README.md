@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`c3`](https://developers.cloudflare.com/pages/get-started/c3).
+# Cloudflare Image Share
+基于 Cloudflare Pages + telegra.ph/R2 实现的私有图片分享(图床)网站。
 
-https://v0.dev/t/ySlMHZHjrM4
-https://v0.dev/t/CQ2T0kRXvzP
-
-url:https://lucide.dev/icons/link
-html:https://lucide.dev/icons/code-xml
-bbcode:https://lucide.dev/icons/brackets
-
-## Next.js 部署 CF 的坑
-### 所有动态组件和 api 都必须使用 edge 环境
-这导致两个比较严重的问题：
-1. next.js 的 edge 环境没有加密模块，导致编译报错
-2. next.js 的 server actions 必须导出 async 函数，而 cf 要求 action 必须运行在 edge 环境，但是增加了 export const runtime = 'edge' 之后，next.js 编译器认为导出了一个同步函数，导致部署失败
-
-## TODO
-- [X] 上传到 tg
-- [X] 访问 tg 图片
-- [X] 密码
-- [X] 回车登录
-- [X] 上传时图片选择区域 disabled
-- [X] 拖拽上传限制后缀名
-- [X] 复制 bb，md 链接
-- [ ] 图片链接签名
-- [ ] 图片本地压缩
+## 特性
+- [X] telegra.ph 支持下的无限图片储存空间
+- [X] 可选 Cloudflare R2 存储
+- [X] 密码保护，开启后有密码才能上传
+- [X] telegra.ph 链接签名保护
+- [X] github 部署
+- [ ] ctrl+v 上传图片
+- [ ] 图片压缩
 - [ ] 多文件上传
 
+telegra.ph 是匿名发布，所以图片一旦发布无法删除，永远可以直接通过 telegra.ph 域名访问。
+
+链接签名保护开启下，在 telegra.ph 直接上传的图片无法通过你的服务器代理访问，规避法律风险。
+
+Cloudflare R2 免费空间 10GB，可以手动删除图片。
 
 
+[//]: # (## 为什么开发这个项目)
 
-## Getting Started
+## 如何部署
+1. fork 项目，在 Cloudflare Pages 创建新项目，选择 GitHub 作为代码仓库。
+2. 在“设置构建和部署”页选择“框架预设”为“Next.js”，点击“保存并部署”。
+3. 等待部署完成，点击“继续处理项目”进入项目主页 
+现在访问项目会报错“Node.JS Compatibility Error”，因为还没设置“兼容性标志”
+4. 在 cloudflare pages 项目的 “设置” 页选择左侧菜单函数，
+然后找到“兼容性标志”部分，点击“配置生产兼容性标志”，内容填写```nodejs_compat```
+5. 重新部署，项目应该可以正常访问了。
 
-First, run the development server:
+## 配置
+支持的环境变量
+```dotenv
+PASSWORD = "123456"             # 访问密码，不设则可以公开上传
+SECRET_KEY = "my_secret_key"    # 图片签名密钥，打开图片签名保护时必填
+STORAGE_PROVIDER = "telegraph"  # 图片存储方式，目前支持 telegraph 和 r2
+TELEGRAPH_SIGN_ENABLED = "true" # 是否开启 telegra.ph 链接签名保护
+```
+
+当使用 Cloudflare R2 时，需要配置R2 存储桶绑定，
+在 cloudflare pages 项目的 “设置” 页，
+左侧菜单选择函数，然后在页面里找到 “R2 存储桶绑定”
+填写 R2 存储桶名称```R2_BUCKET```和对应的存储桶，
+然后点击 “保存”
+
+## 技术栈
+- Next.js 14
+- Cloudflare Pages
+- Cloudflare R2
+- v0.dev
+
+## 开发
+
+启动开发环境:
 
 ```bash
 npm run dev
@@ -42,55 +64,14 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+访问 [http://localhost:3000](http://localhost:3000) 
 
-## Cloudflare integration
+## Next.js 部署到 Cloudflare 的兼容性问题
 
-Besides the `dev` script mentioned above `c3` has added a few extra scripts that allow you to integrate the application with the [Cloudflare Pages](https://pages.cloudflare.com/) environment, these are:
-  - `pages:build` to build the application for Pages using the [`@cloudflare/next-on-pages`](https://github.com/cloudflare/next-on-pages) CLI
-  - `preview` to locally preview your Pages application using the [Wrangler](https://developers.cloudflare.com/workers/wrangler/) CLI
-  - `deploy` to deploy your Pages application using the [Wrangler](https://developers.cloudflare.com/workers/wrangler/) CLI
+- Cloudflare 所有动态页面和 api 都必须使用 edge 环境
+- next.js 的 server actions 为必须导出 async 函数
 
-> __Note:__ while the `dev` script is optimal for local development you should preview your Pages application as well (periodically or before deployments) in order to make sure that it can properly work in the Pages environment (for more details see the [`@cloudflare/next-on-pages` recommended workflow](https://github.com/cloudflare/next-on-pages/blob/main/internal-packages/next-dev/README.md#recommended-development-workflow))
+Cloudflare 运行在 edge 环境，必须在文件内增加 export const runtime = 'edge'，
+而 next.js 编译器认为导出了一个同步函数（我认为这是 next.js bug），会导致部署失败，暂时无解，许等待 next.js 解决。
 
-### Bindings
-
-Cloudflare [Bindings](https://developers.cloudflare.com/pages/functions/bindings/) are what allows you to interact with resources available in the Cloudflare Platform.
-
-You can use bindings during development, when previewing locally your application and of course in the deployed application:
-
-- To use bindings in dev mode you need to define them in the `next.config.js` file under `setupDevBindings`, this mode uses the `next-dev` `@cloudflare/next-on-pages` submodule. For more details see its [documentation](https://github.com/cloudflare/next-on-pages/blob/05b6256/internal-packages/next-dev/README.md).
-
-- To use bindings in the preview mode you need to add them to the `pages:preview` script accordingly to the `wrangler pages dev` command. For more details see its [documentation](https://developers.cloudflare.com/workers/wrangler/commands/#dev-1) or the [Pages Bindings documentation](https://developers.cloudflare.com/pages/functions/bindings/).
-
-- To use bindings in the deployed application you will need to configure them in the Cloudflare [dashboard](https://dash.cloudflare.com/). For more details see the  [Pages Bindings documentation](https://developers.cloudflare.com/pages/functions/bindings/).
-
-#### KV Example
-
-`c3` has added for you an example showing how you can use a KV binding.
-
-In order to enable the example:
-- Search for javascript/typescript lines containing the following comment:
-  ```ts
-  // KV Example:
-  ```
-  and uncomment the commented lines below it.
-- Do the same in the `wrangler.toml` file, where
-  the comment is:
-  ```
-  # KV Example:
-  ```
-- If you're using TypeScript run the `cf-typegen` script to update the `env.d.ts` file:
-  ```bash
-  npm run cf-typegen
-  # or
-  yarn cf-typegen
-  # or
-  pnpm cf-typegen
-  # or
-  bun cf-typegen
-  ```
-
-After doing this you can run the `dev` or `preview` script and visit the `/api/hello` route to see the example in action.
-
-Finally, if you also want to see the example work in the deployed application make sure to add a `MY_KV_NAMESPACE` binding to your Pages application in its [dashboard kv bindings settings section](https://dash.cloudflare.com/?to=/:account/pages/view/:pages-project/settings/functions#kv_namespace_bindings_section). After having configured it make sure to re-deploy your application.
+所以目前无法使用 server actions，只能使用 api 来做后端。
