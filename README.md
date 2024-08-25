@@ -42,7 +42,7 @@ TELEGRAPH_SIGN_ENABLED = "true" # 是否开启 telegra.ph 链接签名保护
 在 cloudflare pages 项目的 “设置” 页，
 左侧菜单选择函数，然后在页面里找到 “R2 存储桶绑定”
 填写 R2 存储桶名称```R2_BUCKET```和对应的存储桶，
-然后点击 “保存”
+然后点击 “保存”。
 
 ## 技术栈
 - Next.js 14
@@ -51,6 +51,8 @@ TELEGRAPH_SIGN_ENABLED = "true" # 是否开启 telegra.ph 链接签名保护
 - v0.dev
 
 ## 开发
+
+复制 wrangler.toml.dev 文件为 wrangler.toml。
 
 启动开发环境:
 
