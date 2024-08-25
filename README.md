@@ -1,6 +1,8 @@
 # Cloudflare Image Share
 基于 Cloudflare Pages + telegra.ph/R2 实现的私有图片分享(图床)网站。
 
+![image](https://cloudflare-image-share.pages.dev/file/StRCFKTWynky.jpeg)
+
 ## 特性
 - [X] telegra.ph 支持下的无限图片储存空间
 - [X] 可选 Cloudflare R2 存储
@@ -23,26 +25,34 @@ Cloudflare R2 免费空间 10GB，可以手动删除图片。
 ## 如何部署
 1. fork 项目，在 Cloudflare Pages 创建新项目，选择 GitHub 作为代码仓库。
 2. 在“设置构建和部署”页选择“框架预设”为“Next.js”，点击“保存并部署”。
+![image](https://cloudflare-image-share.pages.dev/file/203qsPwjltsq.jpeg)
 3. 等待部署完成，点击“继续处理项目”进入项目主页 
 现在访问项目会报错“Node.JS Compatibility Error”，因为还没设置“兼容性标志”
 4. 在 cloudflare pages 项目的 “设置” 页选择左侧菜单函数，
 然后找到“兼容性标志”部分，点击“配置生产兼容性标志”，内容填写```nodejs_compat```
+![image](https://cloudflare-image-share.pages.dev/file/UBwpyo6p3Diu.jpeg)
 5. 重新部署，项目应该可以正常访问了。
+![image](https://cloudflare-image-share.pages.dev/file/G9Hl66ma73MZ.jpeg)
 
 ## 配置
 支持的环境变量
+
+注意：修改完环境变量后需要重新部署
 ```dotenv
 PASSWORD = "123456"             # 访问密码，不设则可以公开上传
-SECRET_KEY = "my_secret_key"    # 图片签名密钥，打开图片签名保护时必填
+SECRET_KEY = "my_secret_key"    # 图片签名密钥，打开链接签名保护时必填
 STORAGE_PROVIDER = "telegraph"  # 图片存储方式，目前支持 telegraph 和 r2
 TELEGRAPH_SIGN_ENABLED = "true" # 是否开启 telegra.ph 链接签名保护
 ```
+![image](https://cloudflare-image-share.pages.dev/file/EJBhKqdyJ4cs.jpeg)
 
 当使用 Cloudflare R2 时，需要配置R2 存储桶绑定，
 在 cloudflare pages 项目的 “设置” 页，
 左侧菜单选择函数，然后在页面里找到 “R2 存储桶绑定”
 填写 R2 存储桶名称```R2_BUCKET```和对应的存储桶，
 然后点击 “保存”。
+
+![屏幕截图_25-8-2024_21470_dash.cloudflare.com.jpeg](https://cloudflare-image-share.pages.dev/file/Oct63XBFQph5.jpeg)
 
 ## 技术栈
 - Next.js 14
