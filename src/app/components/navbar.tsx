@@ -20,6 +20,7 @@
 import Link from 'next/link';
 import { MountainIcon } from '@/app/components/icon/mountain';
 import { GithubIcon } from '@/app/components/icon/github';
+import { Button } from '@/app/components/ui/button';
 
 export function Navbar() {
   return (
@@ -30,10 +31,12 @@ export function Navbar() {
           <MountainIcon className="h-6 w-6" />
           <span className="text-lg font-semibold">山</span>
         </Link>
-        <Link href="#" className="flex items-center gap-2" prefetch={false}>
-          <GithubIcon className="h-6 w-6" />
-          <span className="sr-only">GitHub</span>
-        </Link>
+        <Button variant="ghost" size="icon" className="ml-auto" asChild>
+          <Link href="https://github.com/mx1700/cloudflare-image-share" target="_blank" className="flex items-center gap-2" prefetch={false}>
+            <GithubIcon className="h-6 w-6" />
+            <span className="sr-only">GitHub</span>
+          </Link>
+        </Button>
       </div>
     </header>
   )

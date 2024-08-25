@@ -92,8 +92,10 @@ export function Login() {
           </Button>
         </div>
         <div className="mt-4 flex w-full items-center justify-end">
-          <Button variant="ghost" size="icon" className="ml-auto">
-            <GithubIcon className="h-6 w-6" />
+          <Button variant="ghost" size="icon" className="ml-auto" asChild>
+            <Link href="https://github.com/mx1700/cloudflare-image-share" target="_blank">
+              <GithubIcon className="h-6 w-6" />
+            </Link>
           </Button>
         </div>
       </div>
