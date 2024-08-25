@@ -60,6 +60,14 @@ export function ImgUpload() {
   };
 
   const fileChange = (file: File) => {
+    const maxSize = 5 * 1024 * 1024;
+    if(file.size > maxSize) {
+      toast({
+        variant: 'destructive',
+        title: 'File size exceeds 5MB.',
+      });
+      return;
+    }
     setFile(file);
     setFilename(file.name);
     setFileKey('');
