@@ -52,7 +52,7 @@ TELEGRAPH_SIGN_ENABLED = "true" # 是否开启 telegra.ph 链接签名保护
 填写 R2 存储桶名称```R2_BUCKET```和对应的存储桶，
 然后点击 “保存”。
 
-![屏幕截图_25-8-2024_21470_dash.cloudflare.com.jpeg](https://cloudflare-image-share.pages.dev/file/Oct63XBFQph5.jpeg)
+![image](https://cloudflare-image-share.pages.dev/file/Oct63XBFQph5.jpeg)
 
 ## 技术栈
 - Next.js 14
