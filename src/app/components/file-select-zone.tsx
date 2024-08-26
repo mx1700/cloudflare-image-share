@@ -109,7 +109,7 @@ const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, fil
             ) : (
                 <>
                     <UploadIcon className="w-8 h-8 text-muted-foreground"/>
-                    <p className="mt-2 text-sm text-muted-foreground">Click to select files</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Drag and drop file here</p>
                 </>
             )}
 

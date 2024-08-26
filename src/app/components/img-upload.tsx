@@ -173,7 +173,7 @@ export function ImgUpload() {
       <Card className="z-10 bg-white bg-opacity-40 rounded-none border-0 shadow-none sm:rounded-xl sm:border sm:shadow">
         <CardHeader>
           <CardTitle>Upload Images</CardTitle>
-          <CardDescription>Drag and drop your images here or click to select files.</CardDescription>
+          <CardDescription>Select, drag and drop, or paste file for upload.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <FileSelectZone
