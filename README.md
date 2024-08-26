@@ -56,7 +56,7 @@ TELEGRAPH_SIGN_ENABLED = "true" # 是否开启 telegra.ph 链接签名保护
 ![image](https://cloudflare-image-share.pages.dev/file/Oct63XBFQph5.jpeg)
 
 ## 技术栈
-- Next.js 14
+- Next.js
 - Cloudflare Pages
 - Cloudflare R2
 - v0.dev
@@ -88,3 +88,6 @@ Cloudflare 运行在 edge 环境，必须在文件内增加 export const runtime
 而 next.js 编译器认为导出了一个同步函数（我认为这是 next.js bug），会导致部署失败，暂时无解，许等待 next.js 解决。
 
 所以目前无法使用 server actions，只能使用 api 来做后端。
+
+## TODO
+- [ ] 尝试增加状态管理库 zustand
