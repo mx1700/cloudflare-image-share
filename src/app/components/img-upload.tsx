@@ -37,8 +37,9 @@ import {MarkdownIcon} from "@/app/components/icon/markdown-icon";
 import {BBCodeIcon} from "@/app/components/icon/bb-code-icon";
 import {UrlIcon} from "@/app/components/icon/url-icon";
 import {FileSelectZone, FileSelectZoneRef} from "@/app/components/file-select-zone";
+import imageCompression from 'browser-image-compression';
 
-type ImgUploadStatus = 'idle' | 'selected' | 'uploading' | 'completed'
+type ImgUploadStatus = 'idle' | 'selected' | 'compressing' |'uploading' | 'completed'
 type ImgUploadState = {
   status: ImgUploadStatus;
   file: File | null;
@@ -49,6 +50,7 @@ type ImgUploadState = {
 type ImgUploadAction =
     | { type: 'idle' }
     | { type: 'selected'; file: File }
+    | { type: 'compressing' }
     | { type: 'uploading'; progress: number }
     | { type: 'completed'; fileKey: string }
     | { type: 'error'; error: string }
@@ -59,6 +61,8 @@ const uploadReducer: Reducer<ImgUploadState, ImgUploadAction> = (state, action) 
       return { ...state, status: 'idle', file: null, fileKey: '', progress: 0 };
     case 'selected':
       return { ...state, status: 'selected', file: action.file, fileKey: '', progress: 0 };
+    case 'compressing':
+      return { ...state, status: 'compressing' };
     case 'uploading':
       return { ...state, status: 'uploading', progress: action.progress };
     case 'completed':
@@ -121,11 +125,24 @@ export function ImgUpload() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
+      const formData = new FormData();
+
+      if(file.size > 1024 * 1024 * 5) {
+        const options = {
+          maxSizeMB: 5,
+          maxWidthOrHeight: 4096,
+          useWebWorker: true,
+        }
+        dispatch({ type: 'compressing' });
+        const compressedFile = await imageCompression(file, options);
+        formData.append('file', compressedFile);
+      } else {
+        formData.append('file', file);
+      }
+
       dispatch({ type: 'uploading', progress: 0 });
+
       const response = await axios.post('/api/upload', formData, {
         onUploadProgress: function(progressEvent) {
           if (progressEvent.lengthComputable && progressEvent.total) {
@@ -141,7 +158,12 @@ export function ImgUpload() {
         description: ' 👏 Upload completed.',
       });
     } catch (e: any) {
-      const error = e.response?.data?.message || 'Upload failed.';
+      let error: string;
+      if(typeof e === 'string') {
+        error = e;
+      } else {
+        error = e.response?.data?.message || 'Upload failed.';
+      }
       dispatch({ type: 'error', error })
       toast({
         variant: 'destructive',
@@ -150,8 +172,8 @@ export function ImgUpload() {
     }
   };
 
-  const uploading = status === 'uploading';
-  const sProgress = (uploading && progress > 95) ? 95 : progress;
+  const selectFileDisabled = status === 'uploading' || status === 'compressing';
+  const sProgress = (selectFileDisabled && progress > 98) ? 98 : progress;
 
   function getButtonText(status: ImgUploadStatus) {
     switch (status) {
@@ -165,6 +187,12 @@ export function ImgUpload() {
         return (
             <Button type="button" onClick={handleUpload} className="w-full">
               Upload
+            </Button>
+        );
+      case 'compressing':
+        return (
+            <Button type="button" disabled={true} className="w-full">
+              Compressing...
             </Button>
         );
       case 'uploading':
@@ -193,7 +221,7 @@ export function ImgUpload() {
         <CardContent className="grid gap-4">
           <FileSelectZone
               ref={fileZoneRef}
-              disabled={uploading}
+              disabled={selectFileDisabled}
               onFileChange={handleFileChange}
               onError={handleFileSelectError}
               file={file}

@@ -40,9 +40,9 @@ const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, fil
         if (disabled) {
             return;
         }
-        const maxSize = 5 * 1024 * 1024;
+        const maxSize = 10 * 1024 * 1024;
         if (file.size > maxSize) {
-            onError?.('File size exceeds 5MB.')
+            onError?.('File size exceeds 10MB.')
             return;
         }
         onFileChange && onFileChange(file)
