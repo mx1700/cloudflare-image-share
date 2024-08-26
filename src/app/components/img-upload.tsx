@@ -21,7 +21,7 @@
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/app/components/ui/card';
 import {Progress} from '@/app/components/ui/progress';
 import {Button} from '@/app/components/ui/button';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {Reducer, useCallback, useEffect, useReducer, useRef, useState} from 'react';
 import axios from 'axios';
 import {Input} from '@/app/components/ui/input';
 import {useToast} from '@/app/components/ui/use-toast';
@@ -40,14 +40,33 @@ import {BBCodeIcon} from "@/app/components/icon/bb-code-icon";
 import {UrlIcon} from "@/app/components/icon/url-icon";
 import {UploadIcon} from "@/app/components/icon/upload-icon";
 
+type ImgUploadStatus = 'idle' | 'selected' | 'uploading' | 'completed'
+type ImgUploadState = {
+  status: ImgUploadStatus;
+  file: File | null;
+  fileKey: string;
+  progress: number;
+}
+type ImgUploadAction = { type: 'idle' } | { type: 'selected'; file: File } | { type: 'uploading'; progress: number } | { type: 'completed'; fileKey: string } | { type: 'error'; error: string }
+const uploadReducer: Reducer<ImgUploadState, ImgUploadAction> = (state, action) => {
+  switch (action.type) {
+    case 'idle':
+      return { ...state, status: 'idle', file: null, fileKey: '', progress: 0 };
+    case 'selected':
+      return { ...state, status: 'selected', file: action.file, fileKey: '', progress: 0 };
+    case 'uploading':
+      return { ...state, status: 'uploading', progress: action.progress };
+    case 'completed':
+      return { ...state, status: 'completed', fileKey: action.fileKey, progress: 100 };
+    case 'error':
+      return { ...state, status: 'selected', fileKey: '', progress: 0 };
+  }
+}
+
+const initialState: ImgUploadState = { status: 'idle', file: null, fileKey: '', progress: 0 };
+
 export function ImgUpload() {
-  const [file, setFile] = useState<File | null>(null);
-
-  const [filename, setFilename] = useState('');
-  const [fileKey, setFileKey] = useState('');
-
-  const [progress, setProgress] = useState(0);
-  const [uploading, setUploading] = useState(false);
+  const [{ status, file, fileKey, progress }, dispatch] = useReducer(uploadReducer, initialState);
 
   const [copyLink, setCopyLink] = useState('');
 
@@ -57,10 +76,7 @@ export function ImgUpload() {
   const fileUrl = filePath && new URL(filePath, document.baseURI).href;
 
   const handleFileChange = (file: File) => {
-    setFile(file);
-    setFilename(file.name);
-    setFileKey('');
-    setProgress(0);
+    dispatch({ type: 'selected', file })
   };
 
   const handleCopyUrl = async () => {
@@ -85,33 +101,28 @@ export function ImgUpload() {
     formData.append('file', file);
 
     try {
-      setUploading(true);
-      setFileKey('');
-      setProgress(0);
+      dispatch({ type: 'uploading', progress: 0 });
       const response = await axios.post('/api/upload', formData, {
         onUploadProgress: function(progressEvent) {
           if (progressEvent.lengthComputable && progressEvent.total) {
             const percentComplete = Math.floor((progressEvent.loaded / progressEvent.total) * 100);
-            setProgress(percentComplete);
+            dispatch({ type: 'uploading', progress: percentComplete });
           }
         },
       });
 
       const data = response.data;
-      setFile(null);
-      setFileKey(data.key);
-      setProgress(100);
+      dispatch({ type: 'completed', fileKey: data.key });
       toast({
         description: ' 👏 Upload completed.',
       });
-    } catch (error: any) {
+    } catch (e: any) {
+      const error = e.response?.data?.message || 'Upload failed.';
+      dispatch({ type: 'error', error })
       toast({
         variant: 'destructive',
-        title: error.response?.data?.message || 'Upload failed.',
+        title: error,
       });
-      setProgress(0);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -123,7 +134,8 @@ export function ImgUpload() {
     }
   };
 
-  const buttonText = fileKey ? '✨ Copy to Clipboard ✨' : (uploading ? 'Uploading...' : 'Submit');
+  const uploading = status === 'uploading';
+  const buttonText = status === 'completed' ? '✨ Copy to Clipboard ✨' : (uploading ? 'Uploading...' : 'Submit');
   const sProgress = (uploading && progress > 95) ? 95 : progress;
 
   return (
@@ -135,9 +147,14 @@ export function ImgUpload() {
           <CardDescription>Drag and drop your images here or click to select files.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <FileZone disabled={uploading} onFileChange={handleFileChange} className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted rounded-lg cursor-pointer" />
+          <FileZone
+              disabled={uploading}
+              onFileChange={handleFileChange}
+              file={file}
+              className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted rounded-lg cursor-pointer"
+          />
           <Progress value={sProgress} />
-          <LinkCopyBox link={fileUrl} filename={filename} onChange={setCopyLink} />
+          <LinkCopyBox link={fileUrl} filename={file?.name} onChange={setCopyLink} />
           <Button type="button" disabled={uploading} variant={!fileKey ? 'default' : 'success'} onClick={handleSubmit}
                   className="w-full">
             {buttonText}
@@ -148,11 +165,22 @@ export function ImgUpload() {
   );
 }
 
-function FileZone({ disabled, onFileChange, className }: { disabled: boolean, onFileChange: (file: File) => void, className?: string }) {
+function FileZone({ disabled, onFileChange, className, file }: { disabled: boolean, onFileChange: (file: File) => void, className?: string, file: File | null }) {
   const inputFileRef = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    setPreviewUrl('');
+    if(file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, [file, setPreviewUrl]);
 
   const fileChange = useCallback((file: File) => {
     if(disabled) {
@@ -167,18 +195,12 @@ function FileZone({ disabled, onFileChange, className }: { disabled: boolean, on
       return;
     }
     onFileChange && onFileChange(file)
-    setPreviewUrl('');
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   }, [disabled, onFileChange, toast]);
 
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
-      const items = event.clipboardData.items;
-      if(items.length === 0) {
+      const items = event.clipboardData?.items;
+      if(!items || items.length === 0) {
         return;
       }
 
@@ -192,7 +214,7 @@ function FileZone({ disabled, onFileChange, className }: { disabled: boolean, on
       }
 
       const file = item.getAsFile();
-      if(file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/gif') {
+      if(!file || (file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/gif')) {
         toast({
           variant: 'destructive',
           title: 'Only JPG, PNG, and GIF images are supported.',
