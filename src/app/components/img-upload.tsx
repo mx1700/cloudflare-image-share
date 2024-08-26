@@ -213,10 +213,6 @@ function FileZone({ disabled, onFileChange, className, file }: { disabled: boole
 
       const item = items[0];
       if(item.kind !== 'file') {
-        toast({
-          variant: 'destructive',
-          title: 'Only JPG, PNG, and GIF images are supported.',
-        });
         return;
       }
 

@@ -19,9 +19,14 @@ export async function POST(request: NextRequest) {
   const file = formData.get("file") as File;
 
   const provider = getStorageProvider();
-  const key = await provider.save(file, file.name)
-  const query = key.query?.toString()
-  const fileUrl = query ? `${key.path}?${query}` : key.path;
+  try {
+    const key = await provider.save(file, file.name)
+    const query = key.query?.toString()
+    const fileUrl = query ? `${key.path}?${query}` : key.path;
 
-  return NextResponse.json({ key: fileUrl });
+    return NextResponse.json({ key: fileUrl });
+  } catch (e) {
+    const error = e as Error;
+    return NextResponse.json({ message: error.message || 'Failed to upload file' }, { status: 500 });
+  }
 }

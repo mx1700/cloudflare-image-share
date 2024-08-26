@@ -16,9 +16,12 @@ export default class TelegraphStorageProvider implements StorageProvider {
       method: 'POST',
       body: tgFormData,
     });
-    const body = await r.json<{ src: string }[]>();
-    const path = this.srcToKey(body[0].src);
-    return { path }
+    const body = await r.json<({ src: string }[]) | { error: string }>();
+    if(Array.isArray(body)) {
+      const path = this.srcToKey(body[0].src);
+      return { path }
+    }
+    throw new Error(body.error);
   }
 
   srcToKey(src: string) {
