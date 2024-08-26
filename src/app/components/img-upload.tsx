@@ -21,7 +21,7 @@
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/app/components/ui/card';
 import {Progress} from '@/app/components/ui/progress';
 import {Button} from '@/app/components/ui/button';
-import React, {Reducer, useEffect, useReducer, useRef, useState} from 'react';
+import React, {Reducer, useCallback, useEffect, useReducer, useRef, useState} from 'react';
 import axios from 'axios';
 import {Input} from '@/app/components/ui/input';
 import {useToast} from '@/app/components/ui/use-toast';
@@ -80,9 +80,24 @@ export function ImgUpload() {
   const filePath = fileKey && /file/ + fileKey;
   const fileUrl = filePath && new URL(filePath, document.baseURI).href;
 
-  const handleFileChange = (file: File) => {
+  const handleFileChange = useCallback((file: File) => {
     dispatch({ type: 'selected', file })
-  };
+  }, []);
+
+  const handleFileSelectError = useCallback((error: string) => {
+    toast({
+      variant: 'destructive',
+      title: error,
+    });
+  }, [toast])
+
+  // useEffect(() => {
+  //   console.log('ImgUpload handleFileChange change')
+  // }, [handleFileChange]);
+  //
+  // useEffect(() => {
+  //   console.log('ImgUpload handleFileSelectError change')
+  // }, [handleFileSelectError]);
 
   const handleCopyUrl = async () => {
     if (copyLink) {
@@ -93,7 +108,7 @@ export function ImgUpload() {
     }
   };
 
-  const handleFileSelect = () => {
+  const openFileSelect = () => {
     fileZoneRef.current?.openFileSelect();
   }
 
@@ -142,7 +157,7 @@ export function ImgUpload() {
     switch (status) {
       case 'idle':
         return (
-            <Button type="button" onClick={handleFileSelect} className="w-full">
+            <Button type="button" onClick={openFileSelect} className="w-full">
               Select Image
             </Button>
         );
@@ -180,6 +195,7 @@ export function ImgUpload() {
               ref={fileZoneRef}
               disabled={uploading}
               onFileChange={handleFileChange}
+              onError={handleFileSelectError}
               file={file}
               className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted rounded-lg cursor-pointer"
           />

@@ -1,5 +1,4 @@
 import React, {ForwardedRef, useCallback, useEffect, useRef, useState} from "react";
-import {useToast} from "@/app/components/ui/use-toast";
 import FileDropZone from "@/app/components/file-drop-zone";
 import {cn} from "@/app/lib/utils";
 import {UploadIcon} from "@/app/components/icon/upload-icon";
@@ -8,16 +7,15 @@ export interface FileSelectZoneRef {
     openFileSelect: () => void;
 }
 
-const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, file}: {
-    disabled: boolean,
+const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, file, onError}: {
+    disabled?: boolean,
     onFileChange: (file: File) => void,
     className?: string,
-    file: File | null
+    file: File | null,
+    onError?: (error: string) => void
 }, ref: ForwardedRef<FileSelectZoneRef>) => {
     const inputFileRef = useRef<HTMLInputElement | null>(null);
     const [previewUrl, setPreviewUrl] = useState('');
-
-    const {toast} = useToast();
 
     const openFileSelect = () => {
         inputFileRef.current?.click()
@@ -44,16 +42,14 @@ const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, fil
         }
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) {
-            toast({
-                variant: 'destructive',
-                title: 'File size exceeds 5MB.',
-            });
+            onError?.('File size exceeds 5MB.')
             return;
         }
         onFileChange && onFileChange(file)
-    }, [disabled, onFileChange, toast]);
+    }, [disabled, onFileChange, onError]);
 
     useEffect(() => {
+        console.log('addEventListener');
         const handlePaste = (event: ClipboardEvent) => {
             const items = event.clipboardData?.items;
             if (!items || items.length === 0) {
@@ -67,10 +63,7 @@ const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, fil
 
             const file = item.getAsFile();
             if (!file || (file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/gif')) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Only JPG, PNG, and GIF images are supported.',
-                });
+                onError?.('Only JPG, PNG, and GIF images are supported.')
                 return;
             }
             fileChange(file);
@@ -78,7 +71,15 @@ const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, fil
 
         window.addEventListener('paste', handlePaste);
         return () => window.removeEventListener('paste', handlePaste);
-    }, [fileChange, toast]);
+    }, [fileChange, onError]);
+
+    // useEffect(() => {
+    //     console.log('FileSelectZone fileChange change')
+    // }, [fileChange]);
+    //
+    // useEffect(() => {
+    //     console.log('FileSelectZone onError change')
+    // }, [onError]);
 
     const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length) {
