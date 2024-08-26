@@ -197,7 +197,7 @@ export function ImgUpload() {
               onFileChange={handleFileChange}
               onError={handleFileSelectError}
               file={file}
-              className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted rounded-lg cursor-pointer"
+              className="flex flex-col items-center justify-center h-[272px] border-2 border-dashed rounded-lg cursor-pointer"
           />
           <Progress value={sProgress} />
           <LinkCopyBox link={fileUrl} filename={file?.name} onChange={setCopyLink} />

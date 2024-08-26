@@ -103,9 +103,9 @@ const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, fil
             <input className="hidden" ref={inputFileRef} disabled={disabled} type="file" accept=".jpg,.jpeg,.png,.gif"
                    onChange={handleFileInputChange}/>
             {previewUrl ? (
-                <div>
+                <div className="w-full h-full p-2 flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={previewUrl} className={'max-h-36 rounded'} alt="Preview"/>
+                    <img src={previewUrl} className={'object-scale-down max-h-full rounded-md m-auto'} alt="Preview"/>
                 </div>
             ) : (
                 <>
