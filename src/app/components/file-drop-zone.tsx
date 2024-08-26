@@ -1,6 +1,7 @@
 import React, { DragEvent } from 'react';
 import { getFileExtension } from '@/app/util';
 import { useToast } from '@/app/components/ui/use-toast';
+import {cn} from "@/app/lib/utils";
 
 const FileDropZone = React.forwardRef<
   HTMLParagraphElement,
@@ -38,7 +39,7 @@ const FileDropZone = React.forwardRef<
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={className + "cursor-no-drop"}
+      className={className}
       {...props}
     >
       {children}

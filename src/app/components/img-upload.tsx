@@ -18,13 +18,13 @@
  - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
  **/
 'use client';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/app/components/ui/card';
-import { Progress } from '@/app/components/ui/progress';
-import { Button } from '@/app/components/ui/button';
-import React, { useEffect, useRef, useState } from 'react';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/app/components/ui/card';
+import {Progress} from '@/app/components/ui/progress';
+import {Button} from '@/app/components/ui/button';
+import React, {useEffect, useRef, useState} from 'react';
 import axios from 'axios';
-import { Input } from '@/app/components/ui/input';
-import { useToast } from '@/app/components/ui/use-toast';
+import {Input} from '@/app/components/ui/input';
+import {useToast} from '@/app/components/ui/use-toast';
 import FileDropZone from '@/app/components/file-drop-zone';
 import {
   DropdownMenu,
@@ -32,54 +32,36 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
+import {cn} from "@/app/lib/utils";
+import {ChevronDownIcon} from "@/app/components/icon/chevron-down-icon";
+import {HtmlIcon} from "@/app/components/icon/html-icon";
+import {MarkdownIcon} from "@/app/components/icon/markdown-icon";
+import {BBCodeIcon} from "@/app/components/icon/bb-code-icon";
+import {UrlIcon} from "@/app/components/icon/url-icon";
+import {UploadIcon} from "@/app/components/icon/upload-icon";
 
 export function ImgUpload() {
   const [file, setFile] = useState<File | null>(null);
+
   const [filename, setFilename] = useState('');
   const [fileKey, setFileKey] = useState('');
+
   const [progress, setProgress] = useState(0);
-  const [previewUrl, setPreviewUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+
   const [copyLink, setCopyLink] = useState('');
-  const inputFileRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
 
   const filePath = fileKey && /file/ + fileKey;
   const fileUrl = filePath && new URL(filePath, document.baseURI).href;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length) {
-      const file = e.target.files![0];
-      fileChange(file);
-    }
-  };
-
-  const handleFileDrop = (files: FileList) => {
-    fileChange(files[0]);
-  };
-
-  const fileChange = (file: File) => {
-    const maxSize = 5 * 1024 * 1024;
-    if(file.size > maxSize) {
-      toast({
-        variant: 'destructive',
-        title: 'File size exceeds 5MB.',
-      });
-      return;
-    }
+  const handleFileChange = (file: File) => {
     setFile(file);
     setFilename(file.name);
     setFileKey('');
     setProgress(0);
-    setPreviewUrl('');
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   };
-
 
   const handleCopyUrl = async () => {
     if (copyLink) {
@@ -106,7 +88,6 @@ export function ImgUpload() {
       setUploading(true);
       setFileKey('');
       setProgress(0);
-      // noinspection JSAnnotator
       const response = await axios.post('/api/upload', formData, {
         onUploadProgress: function(progressEvent) {
           if (progressEvent.lengthComputable && progressEvent.total) {
@@ -117,8 +98,8 @@ export function ImgUpload() {
       });
 
       const data = response.data;
-      setFileKey(data.key);
       setFile(null);
+      setFileKey(data.key);
       setProgress(100);
       toast({
         description: ' 👏 Upload completed.',
@@ -154,31 +135,7 @@ export function ImgUpload() {
           <CardDescription>Drag and drop your images here or click to select files.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <input className="hidden" ref={inputFileRef} disabled={uploading} type="file" accept=".jpg,.jpeg,.png,.gif"
-                 onChange={handleFileChange} />
-          <FileDropZone
-            className={
-              'flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted rounded-lg cursor-pointer ' +
-              (uploading ? 'opacity-50 pointer-events-none' : '')
-            }
-            onClick={() => inputFileRef.current?.click()}
-            onFileDrop={handleFileDrop}
-            aria-disabled={uploading}
-            accept=".jpg,.jpeg,.png,.gif"
-          >
-            {previewUrl ? (
-              <div>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={previewUrl} className={'max-h-36 rounded'} alt="Preview" />
-              </div>
-            ) : (
-              <>
-                <UploadIcon className="w-8 h-8 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">Click to select files</p>
-              </>
-            )}
-
-          </FileDropZone>
+          <FileZone disabled={uploading} onFileChange={handleFileChange} className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted rounded-lg cursor-pointer" />
           <Progress value={sProgress} />
           <LinkCopyBox link={fileUrl} filename={filename} onChange={setCopyLink} />
           <Button type="button" disabled={uploading} variant={!fileKey ? 'default' : 'success'} onClick={handleSubmit}
@@ -189,6 +146,66 @@ export function ImgUpload() {
       </Card>
     </div>
   );
+}
+
+function FileZone({ disabled, onFileChange, className }: { disabled: boolean, onFileChange: (file: File) => void, className?: string }) {
+  const inputFileRef = useRef<HTMLInputElement | null>(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  const { toast } = useToast();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length) {
+      const file = e.target.files![0];
+      fileChange(file);
+    }
+  };
+
+  const handleFileDrop = (files: FileList) => {
+    fileChange(files[0]);
+  };
+
+  const fileChange = (file: File) => {
+    const maxSize = 5 * 1024 * 1024;
+    if(file.size > maxSize) {
+      toast({
+        variant: 'destructive',
+        title: 'File size exceeds 5MB.',
+      });
+      return;
+    }
+    onFileChange && onFileChange(file)
+    setPreviewUrl('');
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+      <FileDropZone
+          className={cn(className, disabled ? ' opacity-50 pointer-events-none' : '')}
+          onClick={() => inputFileRef.current?.click()}
+          onFileDrop={handleFileDrop}
+          aria-disabled={disabled}
+          accept=".jpg,.jpeg,.png,.gif"
+      >
+        <input className="hidden" ref={inputFileRef} disabled={disabled} type="file" accept=".jpg,.jpeg,.png,.gif"
+               onChange={handleFileChange} />
+        {previewUrl ? (
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={previewUrl} className={'max-h-36 rounded'} alt="Preview" />
+            </div>
+        ) : (
+            <>
+              <UploadIcon className="w-8 h-8 text-muted-foreground" />
+              <p className="mt-2 text-sm text-muted-foreground">Click to select files</p>
+            </>
+        )}
+
+      </FileDropZone>
+  )
 }
 
 type LinkType = 'url' | 'html' | 'markdown' | 'bbCode'
@@ -231,7 +248,6 @@ function LinkCopyBox({ link, filename, onChange }: {
         <DropdownMenuTrigger asChild>
           <Button type="button" variant="outline"
                   className={'pr-2 pl-3 bg-transparent text-muted-foreground focus-visible:ring-0 hover:bg-transparent'}>
-            {/*<HtmlIcon className="h-5 w-5 mr-1.5"/>*/}
             <CodeIcon type={type} className={'h-4 w-4 mr-1'} />
             <ChevronDownIcon className="h-4 w-4 text-gray-400" />
           </Button>
@@ -285,90 +301,3 @@ function CodeIcon({ type, className }: { type: LinkType, className?: string }) {
   }
 }
 
-function UploadIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" x2="12" y1="3" y2="15" />
-    </svg>
-  );
-}
-
-function UrlIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 17H7A5 5 0 0 1 7 7h2" />
-      <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
-      <line x1="8" x2="16" y1="12" y2="12" />
-    </svg>
-  );
-}
-
-function BBCodeIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 3h3v18h-3" />
-      <path d="M8 21H5V3h3" />
-    </svg>
-  );
-}
-
-function MarkdownIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="4" x2="20" y1="9" y2="9" />
-      <line x1="4" x2="20" y1="15" y2="15" />
-      <line x1="10" x2="8" y1="3" y2="21" />
-      <line x1="16" x2="14" y1="3" y2="21" />
-    </svg>
-  );
-}
-
-function HtmlIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m18 16 4-4-4-4" />
-      <path d="m6 8-4 4 4 4" />
-      <path d="m14.5 4-5 16" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
