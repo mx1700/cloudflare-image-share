@@ -1,5 +1,5 @@
 import {FileKey, StorageProvider} from '@/app/provider/StorageProvider';
-import { generateRandomString, getFileExtension } from '@/app/util';
+import { generateRandomString, getFileExtension } from '@/app/lib/utils';
 
 export default class R2StorageProvider implements StorageProvider {
   private bucket: R2Bucket;

@@ -1,7 +1,6 @@
 import React, { DragEvent } from 'react';
-import { getFileExtension } from '@/app/util';
+import { getFileExtension } from '@/app/lib/utils';
 import { useToast } from '@/app/components/ui/use-toast';
-import {cn} from "@/app/lib/utils";
 
 const FileDropZone = React.forwardRef<
   HTMLParagraphElement,

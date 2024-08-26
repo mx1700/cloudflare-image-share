@@ -31,7 +31,6 @@ import { MountainIcon } from '@/app/components/icon/mountain';
 export function Login() {
   const [password, setPassword] = useState("")
   const router = useRouter()
-  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
   const onPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,16 +48,14 @@ export function Login() {
         body: JSON.stringify({ password }),
       }).then((res) => res.json<{ pass: boolean, message: string | undefined }>());
       if(ret.pass) {
-        await router.push("/");
+        router.push("/");
         return;
       }
       alert(ret.message || "Login Failed")
-      setError(ret.message || "Login Failed")
       setLoading(false);
     } catch (e: any) {
       setLoading(false);
       alert(e.message || "Login Failed")
-      setError(e.message || "Login Failed")
     }
   }
 
@@ -84,7 +81,7 @@ export function Login() {
               placeholder="Enter your password"
               required
               onChange={onPasswordChange}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading} onClick={onSubmit}>

@@ -1,5 +1,4 @@
 import {FileKey, StorageProvider} from '@/app/provider/StorageProvider';
-import { undefined } from 'zod';
 
 const DEFAULT_PREFIX = '/file/';
 export default class TelegraphStorageProvider implements StorageProvider {
@@ -18,7 +17,7 @@ export default class TelegraphStorageProvider implements StorageProvider {
       body: tgFormData,
     });
     const body = await r.json<{ src: string }[]>();
-    var path = this.srcToKey(body[0].src);
+    const path = this.srcToKey(body[0].src);
     return { path }
   }
 

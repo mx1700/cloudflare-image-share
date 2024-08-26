@@ -47,7 +47,14 @@ type ImgUploadState = {
   fileKey: string;
   progress: number;
 }
-type ImgUploadAction = { type: 'idle' } | { type: 'selected'; file: File } | { type: 'uploading'; progress: number } | { type: 'completed'; fileKey: string } | { type: 'error'; error: string }
+
+type ImgUploadAction =
+    | { type: 'idle' }
+    | { type: 'selected'; file: File }
+    | { type: 'uploading'; progress: number }
+    | { type: 'completed'; fileKey: string }
+    | { type: 'error'; error: string }
+
 const uploadReducer: Reducer<ImgUploadState, ImgUploadAction> = (state, action) => {
   switch (action.type) {
     case 'idle':

@@ -18,8 +18,7 @@ export default class SignProxyProvider implements StorageProvider {
 
     async save(file: ReadableStream | Blob, filename: string): Promise<FileKey> {
         const key = await this.provider.save(file, filename);
-        const sign = await this.signing(key);
-        return sign
+        return await this.signing(key)
     }
 
     async checkSign(key: FileKey): Promise<boolean> {
@@ -44,10 +43,9 @@ export default class SignProxyProvider implements StorageProvider {
             data
         );
 
-        const hexString = Array.from(new Uint8Array(myDigest))
+        return Array.from(new Uint8Array(myDigest))
             .map(b => b.toString(16).padStart(2, '0'))
-            .splice(0,3)
-            .join('')
-        return hexString;
+            .splice(0, 3)
+            .join('');
     }
 }
