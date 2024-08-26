@@ -21,7 +21,7 @@
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/app/components/ui/card';
 import {Progress} from '@/app/components/ui/progress';
 import {Button} from '@/app/components/ui/button';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import {Input} from '@/app/components/ui/input';
 import {useToast} from '@/app/components/ui/use-toast';
@@ -153,18 +153,11 @@ function FileZone({ disabled, onFileChange, className }: { disabled: boolean, on
   const [previewUrl, setPreviewUrl] = useState('');
 
   const { toast } = useToast();
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length) {
-      const file = e.target.files![0];
-      fileChange(file);
+
+  const fileChange = useCallback((file: File) => {
+    if(disabled) {
+      return;
     }
-  };
-
-  const handleFileDrop = (files: FileList) => {
-    fileChange(files[0]);
-  };
-
-  const fileChange = (file: File) => {
     const maxSize = 5 * 1024 * 1024;
     if(file.size > maxSize) {
       toast({
@@ -180,6 +173,48 @@ function FileZone({ disabled, onFileChange, className }: { disabled: boolean, on
       setPreviewUrl(reader.result as string);
     };
     reader.readAsDataURL(file);
+  }, [disabled, onFileChange, toast]);
+
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      const items = event.clipboardData.items;
+      if(items.length === 0) {
+        return;
+      }
+
+      const item = items[0];
+      if(item.kind !== 'file') {
+        toast({
+          variant: 'destructive',
+          title: 'Only JPG, PNG, and GIF images are supported.',
+        });
+        return;
+      }
+
+      const file = item.getAsFile();
+      if(file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/gif') {
+        toast({
+          variant: 'destructive',
+          title: 'Only JPG, PNG, and GIF images are supported.',
+        });
+        return;
+      }
+      fileChange(file);
+    }
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [fileChange, toast]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length) {
+      const file = e.target.files![0];
+      fileChange(file);
+    }
+  };
+
+  const handleFileDrop = (files: FileList) => {
+    fileChange(files[0]);
   };
 
   return (
@@ -227,13 +262,12 @@ function LinkCopyBox({ link, filename, onChange }: {
     if (onChange) {
       onChange(copyLink);
     }
-  }, [copyLink]);
+  }, [copyLink, onChange]);
   const handleInputFocus = () => {
     if (inputRef.current) {
       inputRef.current.select();
     }
   };
-
   const handleTypeChange = (value: LinkType) => {
     return () => {
       setType(value);
