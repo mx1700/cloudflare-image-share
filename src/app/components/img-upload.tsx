@@ -136,7 +136,8 @@ export function ImgUpload() {
         }
         dispatch({ type: 'compressing' });
         const compressedFile = await imageCompression(file, options);
-        formData.append('file', compressedFile);
+        const newFile = new File([compressedFile], file.name, { type: compressedFile.type });
+        formData.append('file', newFile);
       } else {
         formData.append('file', file);
       }
