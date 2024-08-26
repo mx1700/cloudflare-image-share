@@ -21,24 +21,22 @@
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/app/components/ui/card';
 import {Progress} from '@/app/components/ui/progress';
 import {Button} from '@/app/components/ui/button';
-import React, {Reducer, useCallback, useEffect, useReducer, useRef, useState} from 'react';
+import React, {Reducer, useEffect, useReducer, useRef, useState} from 'react';
 import axios from 'axios';
 import {Input} from '@/app/components/ui/input';
 import {useToast} from '@/app/components/ui/use-toast';
-import FileDropZone from '@/app/components/file-drop-zone';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
-import {cn} from "@/app/lib/utils";
 import {ChevronDownIcon} from "@/app/components/icon/chevron-down-icon";
 import {HtmlIcon} from "@/app/components/icon/html-icon";
 import {MarkdownIcon} from "@/app/components/icon/markdown-icon";
 import {BBCodeIcon} from "@/app/components/icon/bb-code-icon";
 import {UrlIcon} from "@/app/components/icon/url-icon";
-import {UploadIcon} from "@/app/components/icon/upload-icon";
+import {FileSelectZone, FileSelectZoneRef} from "@/app/components/file-select-zone";
 
 type ImgUploadStatus = 'idle' | 'selected' | 'uploading' | 'completed'
 type ImgUploadState = {
@@ -74,8 +72,8 @@ const initialState: ImgUploadState = { status: 'idle', file: null, fileKey: '', 
 
 export function ImgUpload() {
   const [{ status, file, fileKey, progress }, dispatch] = useReducer(uploadReducer, initialState);
-
   const [copyLink, setCopyLink] = useState('');
+  const fileZoneRef = useRef<FileSelectZoneRef | null>(null);
 
   const { toast } = useToast();
 
@@ -94,6 +92,10 @@ export function ImgUpload() {
       });
     }
   };
+
+  const handleFileSelect = () => {
+    fileZoneRef.current?.openFileSelect();
+  }
 
   const handleUpload = async () => {
     if (!file) {
@@ -133,17 +135,37 @@ export function ImgUpload() {
     }
   };
 
-  const handleSubmit = async () => {
-    if (fileKey) {
-      await handleCopyUrl();
-    } else {
-      await handleUpload();
-    }
-  };
-
   const uploading = status === 'uploading';
-  const buttonText = status === 'completed' ? '✨ Copy to Clipboard ✨' : (uploading ? 'Uploading...' : 'Submit');
   const sProgress = (uploading && progress > 95) ? 95 : progress;
+
+  function getButtonText(status: ImgUploadStatus) {
+    switch (status) {
+      case 'idle':
+        return (
+            <Button type="button" onClick={handleFileSelect} className="w-full">
+              Select Image
+            </Button>
+        );
+      case 'selected':
+        return (
+            <Button type="button" onClick={handleUpload} className="w-full">
+              Upload
+            </Button>
+        );
+      case 'uploading':
+        return (
+            <Button type="button" disabled={true} className="w-full">
+              Uploading...
+            </Button>
+        );
+      case 'completed':
+        return (
+            <Button type="button" variant='success' onClick={handleCopyUrl} className="w-full">
+              ✨ Copy to Clipboard ✨
+            </Button>
+        );
+    }
+  }
 
   return (
     <div className="relative w-full max-w-md mx-auto">
@@ -154,7 +176,8 @@ export function ImgUpload() {
           <CardDescription>Drag and drop your images here or click to select files.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <FileZone
+          <FileSelectZone
+              ref={fileZoneRef}
               disabled={uploading}
               onFileChange={handleFileChange}
               file={file}
@@ -162,110 +185,11 @@ export function ImgUpload() {
           />
           <Progress value={sProgress} />
           <LinkCopyBox link={fileUrl} filename={file?.name} onChange={setCopyLink} />
-          <Button type="button" disabled={uploading} variant={!fileKey ? 'default' : 'success'} onClick={handleSubmit}
-                  className="w-full">
-            {buttonText}
-          </Button>
+          {getButtonText(status)}
         </CardContent>
       </Card>
     </div>
   );
-}
-
-function FileZone({ disabled, onFileChange, className, file }: { disabled: boolean, onFileChange: (file: File) => void, className?: string, file: File | null }) {
-  const inputFileRef = useRef<HTMLInputElement | null>(null);
-  const [previewUrl, setPreviewUrl] = useState('');
-
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setPreviewUrl('');
-    if(file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  }, [file, setPreviewUrl]);
-
-  const fileChange = useCallback((file: File) => {
-    if(disabled) {
-      return;
-    }
-    const maxSize = 5 * 1024 * 1024;
-    if(file.size > maxSize) {
-      toast({
-        variant: 'destructive',
-        title: 'File size exceeds 5MB.',
-      });
-      return;
-    }
-    onFileChange && onFileChange(file)
-  }, [disabled, onFileChange, toast]);
-
-  useEffect(() => {
-    const handlePaste = (event: ClipboardEvent) => {
-      const items = event.clipboardData?.items;
-      if(!items || items.length === 0) {
-        return;
-      }
-
-      const item = items[0];
-      if(item.kind !== 'file') {
-        return;
-      }
-
-      const file = item.getAsFile();
-      if(!file || (file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/gif')) {
-        toast({
-          variant: 'destructive',
-          title: 'Only JPG, PNG, and GIF images are supported.',
-        });
-        return;
-      }
-      fileChange(file);
-    }
-
-    window.addEventListener('paste', handlePaste);
-    return () => window.removeEventListener('paste', handlePaste);
-  }, [fileChange, toast]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length) {
-      const file = e.target.files![0];
-      fileChange(file);
-    }
-  };
-
-  const handleFileDrop = (files: FileList) => {
-    fileChange(files[0]);
-  };
-
-  return (
-      <FileDropZone
-          className={cn(className, disabled ? ' opacity-50 pointer-events-none' : '')}
-          onClick={() => inputFileRef.current?.click()}
-          onFileDrop={handleFileDrop}
-          aria-disabled={disabled}
-          accept=".jpg,.jpeg,.png,.gif"
-      >
-        <input className="hidden" ref={inputFileRef} disabled={disabled} type="file" accept=".jpg,.jpeg,.png,.gif"
-               onChange={handleFileChange} />
-        {previewUrl ? (
-            <div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewUrl} className={'max-h-36 rounded'} alt="Preview" />
-            </div>
-        ) : (
-            <>
-              <UploadIcon className="w-8 h-8 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">Click to select files</p>
-            </>
-        )}
-
-      </FileDropZone>
-  )
 }
 
 type LinkType = 'url' | 'html' | 'markdown' | 'bbCode'
