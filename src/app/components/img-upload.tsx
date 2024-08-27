@@ -77,7 +77,7 @@ const initialState: ImgUploadState = { status: 'idle', file: null, fileKey: '', 
 export interface ImgUploadProps {
   maxImageSize?: number;
   enableImageCompression?: boolean;
-  compressedImageMaxSize?: boolean;
+  compressedImageMaxSize?: number;
   maxImageWidthOrHeight?: number;
 }
 
