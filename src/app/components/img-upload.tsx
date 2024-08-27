@@ -50,7 +50,7 @@ type ImgUploadState = {
 type ImgUploadAction =
     | { type: 'idle' }
     | { type: 'selected'; file: File }
-    | { type: 'compressing' }
+    | { type: 'compressing'; progress: number }
     | { type: 'uploading'; progress: number }
     | { type: 'completed'; fileKey: string }
     | { type: 'error'; error: string }
@@ -62,7 +62,7 @@ const uploadReducer: Reducer<ImgUploadState, ImgUploadAction> = (state, action) 
     case 'selected':
       return { ...state, status: 'selected', file: action.file, fileKey: '', progress: 0 };
     case 'compressing':
-      return { ...state, status: 'compressing' };
+      return { ...state, status: 'compressing', progress: action.progress };
     case 'uploading':
       return { ...state, status: 'uploading', progress: action.progress };
     case 'completed':
@@ -143,6 +143,7 @@ export function ImgUpload(
       const formData = new FormData();
 
       if(enableImageCompression && file.size > compressedImageMaxSize) {
+        dispatch({ type: 'compressing', progress: 0 });
         const options = {
           maxSizeMB: compressedImageMaxSize,
           maxWidthOrHeight: maxImageWidthOrHeight,
@@ -150,8 +151,10 @@ export function ImgUpload(
           maxIteration: 5,
           initialQuality: 0.9,
           alwaysKeepResolution: true,
+          onProgress: (progress) => {
+            dispatch({ type: 'compressing', progress: progress });
+          }
         }
-        dispatch({ type: 'compressing' });
         const compressedFile = await imageCompression(file, options);
         const newFile = new File([compressedFile], file.name, { type: compressedFile.type });
         formData.append('file', newFile);
@@ -191,7 +194,7 @@ export function ImgUpload(
   };
 
   const selectFileDisabled = status === 'uploading' || status === 'compressing';
-  const sProgress = (selectFileDisabled && progress > 98) ? 98 : progress;
+  const sProgress = (status === 'uploading' && progress > 98) ? 98 : progress;
 
   function getButtonText(status: ImgUploadStatus) {
     switch (status) {
@@ -215,7 +218,7 @@ export function ImgUpload(
         );
       case 'uploading':
         return (
-            <Button type="button" disabled={true} className="w-full">
+            <Button type="button" variant='success' disabled={true} className="w-full">
               Uploading...
             </Button>
         );
@@ -246,7 +249,7 @@ export function ImgUpload(
               className="flex flex-col items-center justify-center h-[272px] border-2 border-dashed rounded-lg cursor-pointer"
               maxImageSize={maxImageSize}
           />
-          <Progress value={sProgress} />
+          <Progress key={status} indicatorClassName={status === 'compressing' ? 'bg-gray-500' : 'bg-green-700'} value={sProgress} />
           <LinkCopyBox link={fileUrl} filename={file?.name} onChange={setCopyLink} />
           {getButtonText(status)}
         </CardContent>
