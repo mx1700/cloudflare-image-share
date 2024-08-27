@@ -4,19 +4,19 @@
 ![image](https://cloudflare-image-share.pages.dev/file/StRCFKTWynky.jpeg)
 
 ## 特性
-- [X] telegra.ph 支持下的无限图片储存空间
+- [X] telegraph 支持下的无限图片储存空间
 - [X] 可选 Cloudflare R2 存储
 - [X] 密码保护，开启后有密码才能上传
-- [X] telegra.ph 链接签名保护
+- [X] telegraph 链接签名保护
 - [X] github 部署
 - [X] ctrl+v 上传图片
-- [ ] 图片压缩
+- [X] 图片压缩
 - [ ] 视频文件支持
 - [ ] 多文件上传
 
-telegra.ph 是匿名发布，所以图片一旦发布无法删除，永远可以直接通过 telegra.ph 域名访问。
+telegraph 是匿名发布，所以图片一旦发布无法删除，永远可以直接通过 telegraph 域名访问。
 
-链接签名保护开启下，在 telegra.ph 直接上传的图片无法通过你的服务器代理访问，规避法律风险。
+链接签名保护开启下，在 telegraph 直接上传的图片无法通过你的服务器代理访问，规避法律风险。
 
 Cloudflare R2 免费空间 10GB，可以手动删除图片。
 
@@ -39,12 +39,21 @@ Cloudflare R2 免费空间 10GB，可以手动删除图片。
 支持的环境变量
 
 注意：修改完环境变量后需要重新部署
-```dotenv
-PASSWORD = "123456"             # 访问密码，不设则可以公开上传
-SECRET_KEY = "my_secret_key"    # 图片签名密钥，打开链接签名保护时必填
-STORAGE_PROVIDER = "telegraph"  # 图片存储方式，目前支持 telegraph 和 r2
-TELEGRAPH_SIGN_ENABLED = "true" # 是否开启 telegra.ph 链接签名保护
+```toml
+PASSWORD = "123456"                 # 访问密码，不设则可以公开上传
+SECRET_KEY = "my_secret_key"        # 图片签名密钥，打开链接签名保护时必填
+STORAGE_PROVIDER = "telegraph"      # 图片存储方式，目前支持 telegraph 和 r2
+TELEGRAPH_SIGN_ENABLED = "true"     # 是否开启 telegraph 链接签名保护
+MAX_IMAGE_SIZE = "20"               # 可上传的最大大小，单位 MB
+ENABLE_IMAGE_COMPRESSION = "true"   # 是否开启图片压缩
+COMPRESSED_IMAGE_MAX_SIZE = "5"     # 压缩后的图片最大大小，单位 MB
+MAX_IMAGE_WIDTH_OR_HEIGHT = "2560"  # 图片压缩后的最大宽度或高度
 ```
+
+当图片存储使用 telegraph 时，上传的文件最大不能超过 5MB，所以建议打开压缩。
+压缩后大小设置为 5 MB 时，建议宽高限制在 2560 像素。
+
+
 ![image](https://cloudflare-image-share.pages.dev/file/EJBhKqdyJ4cs.jpeg)
 
 当使用 Cloudflare R2 时，需要配置R2 存储桶绑定，

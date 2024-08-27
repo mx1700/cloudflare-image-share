@@ -20,3 +20,11 @@ export function generateRandomString(length: number): string {
 export function getFileExtension(filename: string): string {
   return filename.substring(filename.lastIndexOf('.') + 1);
 }
+
+export function formatFileSize(fileSizeMB: number) {
+  if(fileSizeMB < 1) {
+    return `${(fileSizeMB * 1000).toFixed(0)} KB`;
+  } else {
+    return `${fileSizeMB.toFixed(0)} MB`;
+  }
+}

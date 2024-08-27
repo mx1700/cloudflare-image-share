@@ -1,18 +1,19 @@
 import React, {ForwardedRef, useCallback, useEffect, useRef, useState} from "react";
 import FileDropZone from "@/app/components/file-drop-zone";
-import {cn} from "@/app/lib/utils";
+import {cn, formatFileSize} from "@/app/lib/utils";
 import {UploadIcon} from "@/app/components/icon/upload-icon";
 
 export interface FileSelectZoneRef {
     openFileSelect: () => void;
 }
 
-const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, file, onError}: {
+const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, file, onError, maxImageSize}: {
     disabled?: boolean,
     onFileChange: (file: File) => void,
     className?: string,
     file: File | null,
-    onError?: (error: string) => void
+    onError?: (error: string) => void,
+    maxImageSize?: number
 }, ref: ForwardedRef<FileSelectZoneRef>) => {
     const inputFileRef = useRef<HTMLInputElement | null>(null);
     const [previewUrl, setPreviewUrl] = useState('');
@@ -40,13 +41,13 @@ const FileSelectZone = React.forwardRef(({disabled, onFileChange, className, fil
         if (disabled) {
             return;
         }
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size > maxSize) {
-            onError?.('File size exceeds 10MB.')
+        if (maxImageSize && file.size > (maxImageSize * 1024 * 1024)) {
+            const maxStr = formatFileSize(maxImageSize)
+            onError?.(`File size exceeds ${maxStr}.`)
             return;
         }
-        onFileChange && onFileChange(file)
-    }, [disabled, onFileChange, onError]);
+        onFileChange?.(file)
+    }, [disabled, maxImageSize, onFileChange, onError]);
 
     useEffect(() => {
         console.log('addEventListener');

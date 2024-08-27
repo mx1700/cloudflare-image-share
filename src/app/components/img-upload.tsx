@@ -74,7 +74,21 @@ const uploadReducer: Reducer<ImgUploadState, ImgUploadAction> = (state, action) 
 
 const initialState: ImgUploadState = { status: 'idle', file: null, fileKey: '', progress: 0 };
 
-export function ImgUpload() {
+export interface ImgUploadProps {
+  maxImageSize?: number;
+  enableImageCompression?: boolean;
+  compressedImageMaxSize?: boolean;
+  maxImageWidthOrHeight?: number;
+}
+
+export function ImgUpload(
+    {
+      maxImageSize,
+      enableImageCompression,
+      compressedImageMaxSize,
+      maxImageWidthOrHeight
+    }: ImgUploadProps
+) {
   const [{ status, file, fileKey, progress }, dispatch] = useReducer(uploadReducer, initialState);
   const [copyLink, setCopyLink] = useState('');
   const fileZoneRef = useRef<FileSelectZoneRef | null>(null);
@@ -128,11 +142,14 @@ export function ImgUpload() {
     try {
       const formData = new FormData();
 
-      if(file.size > 1024 * 1024 * 5) {
+      if(enableImageCompression && file.size > compressedImageMaxSize) {
         const options = {
-          maxSizeMB: 5,
-          maxWidthOrHeight: 4096,
+          maxSizeMB: compressedImageMaxSize,
+          maxWidthOrHeight: maxImageWidthOrHeight,
           useWebWorker: true,
+          maxIteration: 5,
+          initialQuality: 0.9,
+          alwaysKeepResolution: true,
         }
         dispatch({ type: 'compressing' });
         const compressedFile = await imageCompression(file, options);
@@ -227,6 +244,7 @@ export function ImgUpload() {
               onError={handleFileSelectError}
               file={file}
               className="flex flex-col items-center justify-center h-[272px] border-2 border-dashed rounded-lg cursor-pointer"
+              maxImageSize={maxImageSize}
           />
           <Progress value={sProgress} />
           <LinkCopyBox link={fileUrl} filename={file?.name} onChange={setCopyLink} />
