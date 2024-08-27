@@ -17,6 +17,9 @@ export function getStorageProvider(): StorageProvider {
     const providerCfg = getRequestContext().env.STORAGE_PROVIDER || 'telegraph';
     if(providerCfg === 'r2') {
         const bucket = getRequestContext().env.R2_BUCKET;
+        if(!bucket) {
+            throw new Error("R2_BUCKET binding is required");
+        }
         return new R2StorageProvider(bucket);
     }
 

@@ -75,10 +75,10 @@ const uploadReducer: Reducer<ImgUploadState, ImgUploadAction> = (state, action) 
 const initialState: ImgUploadState = { status: 'idle', file: null, fileKey: '', progress: 0 };
 
 export interface ImgUploadProps {
-  maxImageSize?: number;
-  enableImageCompression?: boolean;
-  compressedImageMaxSize?: number;
-  maxImageWidthOrHeight?: number;
+  maxImageSize: number;
+  enableImageCompression: boolean;
+  compressedImageMaxSize: number;
+  maxImageWidthOrHeight: number;
 }
 
 export function ImgUpload(
@@ -151,7 +151,7 @@ export function ImgUpload(
           maxIteration: 5,
           initialQuality: 0.9,
           alwaysKeepResolution: true,
-          onProgress: (progress) => {
+          onProgress: (progress: number) => {
             dispatch({ type: 'compressing', progress: progress });
           }
         }
