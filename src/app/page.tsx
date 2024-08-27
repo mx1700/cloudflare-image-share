@@ -16,7 +16,7 @@ export default async function Home() {
   }
 
   const env =  getRequestContext().env;
-  const maxImageSize = env.MAX_IMAGE_SIZE != undefined ? Number(env.MAX_IMAGE_SIZE) : 10;
+  const maxImageSize = env.MAX_IMAGE_SIZE != undefined ? Number(env.MAX_IMAGE_SIZE) : 15;
   const enableImageCompression = env.ENABLE_IMAGE_COMPRESSION == undefined || env.ENABLE_IMAGE_COMPRESSION.toString() == 'true';   //默认打开压缩
   const compressedImageMaxSize = env.COMPRESSED_IMAGE_MAX_SIZE != undefined ? Number(env.COMPRESSED_IMAGE_MAX_SIZE) : 5;
   const maxImageWidthOrHeight = env.MAX_IMAGE_WIDTH_OR_HEIGHT != undefined ? Number(env.MAX_IMAGE_WIDTH_OR_HEIGHT) : 2560;
