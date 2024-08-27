@@ -148,7 +148,6 @@ export function ImgUpload(
           maxSizeMB: compressedImageMaxSize,
           maxWidthOrHeight: maxImageWidthOrHeight,
           useWebWorker: true,
-          maxIteration: 5,
           initialQuality: 0.9,
           alwaysKeepResolution: true,
           onProgress: (progress: number) => {
