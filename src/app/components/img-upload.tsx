@@ -148,7 +148,7 @@ export function ImgUpload(
           maxSizeMB: compressedImageMaxSize,
           maxWidthOrHeight: maxImageWidthOrHeight,
           useWebWorker: true,
-          initialQuality: 0.9,
+          initialQuality: 0.8,
           alwaysKeepResolution: true,
           onProgress: (progress: number) => {
             dispatch({ type: 'compressing', progress: progress });
