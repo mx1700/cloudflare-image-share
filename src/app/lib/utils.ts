@@ -28,3 +28,7 @@ export function formatFileSize(fileSizeMB: number) {
     return `${fileSizeMB.toFixed(0)} MB`;
   }
 }
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

@@ -38,6 +38,7 @@ import {BBCodeIcon} from "@/app/components/icon/bb-code-icon";
 import {UrlIcon} from "@/app/components/icon/url-icon";
 import {FileSelectZone, FileSelectZoneRef} from "@/app/components/file-select-zone";
 import imageCompression from 'browser-image-compression';
+import {sleep} from "@/app/lib/utils";
 
 type ImgUploadStatus = 'idle' | 'selected' | 'compressing' |'uploading' | 'completed'
 type ImgUploadState = {
@@ -155,6 +156,7 @@ export function ImgUpload(
           }
         }
         const compressedFile = await imageCompression(file, options);
+        await sleep(500); //暂停是为了显示进度条的完成状态，否则会感觉压缩没有完成
         const newFile = new File([compressedFile], file.name, { type: compressedFile.type });
         formData.append('file', newFile);
       } else {
