@@ -14,7 +14,7 @@ export interface StorageProvider {
 }
 
 export function getStorageProvider(): StorageProvider {
-    const providerCfg = getRequestContext().env.STORAGE_PROVIDER || 'telegraph';
+    const providerCfg = getRequestContext().env.STORAGE_PROVIDER || 'r2';
     if(providerCfg === 'r2') {
         const bucket = getRequestContext().env.R2_BUCKET;
         if(!bucket) {
